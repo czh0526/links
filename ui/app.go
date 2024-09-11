@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"github.com/czh0526/links/account"
 	"github.com/czh0526/links/global"
+	"github.com/czh0526/links/links"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"log"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -46,7 +49,7 @@ func (app *AppUI) handleEvents() {
 }
 
 func (app *AppUI) refreshLinks() {
-	friends, err := global.GetMyFriends(app.my.Id)
+	friends, err := fetchOrderedFriends(app.my)
 	if err != nil {
 		log.Printf("【ui】: 刷新用户列表出错：err = %v", err)
 		return
@@ -76,16 +79,17 @@ func NewAppUI(my *account.Account) *AppUI {
 		SetLabel(my.Nickname + " > ").
 		SetFieldWidth(0).
 		SetFieldBackgroundColor(tcell.ColorBlack)
+	input.SetBorder(true)
 
 	chatPanel := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(msgBox, 0, 1, false).
+		AddItem(msgBox, 0, 2, false).
 		AddItem(input, 0, 1, true)
 
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(friendList, 35, 1, false).
-		AddItem(chatPanel, 1, 1, false)
+		AddItem(chatPanel, 0, 1, false)
 	root.SetRoot(flex, true)
 
 	return &AppUI{
@@ -94,4 +98,23 @@ func NewAppUI(my *account.Account) *AppUI {
 		friendList: friendList,
 		doneCh:     make(chan struct{}),
 	}
+}
+
+func fetchOrderedFriends(my *account.Account) ([]*links.Friend, error) {
+	friends, err := global.GetMyFriends(my.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	friendList := make([]*links.Friend, 0, len(friends))
+	for _, friend := range friends {
+		friendList = append(friendList, friend)
+	}
+
+	// 按照 nickname 排序
+	sort.Slice(friendList, func(i, j int) bool {
+		return strings.Compare(friendList[i].Nickname, friendList[j].Nickname) > 0
+	})
+
+	return friendList, nil
 }

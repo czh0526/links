@@ -65,7 +65,7 @@ func main() {
 	}
 
 	// 初始化日志文件
-	logFile, err := initLog(shortID(h))
+	logFile, err := initLog(myAccount.Nickname, shortID(h))
 	if err != nil {
 	}
 	defer logFile.Close()
@@ -78,9 +78,9 @@ func main() {
 	}
 }
 
-func initLog(id string) (*os.File, error) {
+func initLog(nickname string, id string) (*os.File, error) {
 	file, err := os.OpenFile(
-		fmt.Sprintf("chat_%s.log", id),
+		fmt.Sprintf("logs/%s_%s.log", nickname, id),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
