@@ -79,8 +79,13 @@ func main() {
 }
 
 func initLog(nickname string, id string) (*os.File, error) {
+	err := os.MkdirAll("./logs", 0755)
+	if err != nil {
+		return nil, err
+	}
+
 	file, err := os.OpenFile(
-		fmt.Sprintf("logs/%s_%s.log", nickname, id),
+		fmt.Sprintf("./logs/%s_%s.log", nickname, id),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
